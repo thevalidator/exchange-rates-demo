@@ -19,7 +19,6 @@ public class ExchangeFeignClientConfig {
     @Value("${currency.base}")
     private String baseCurrency;
     
-    
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {

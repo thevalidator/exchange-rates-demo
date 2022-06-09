@@ -4,29 +4,28 @@
 package ru.alfabank.currency.controller;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import javax.net.ssl.HttpsURLConnection;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.alfabank.currency.client.ExchangeApiClient;
 import ru.alfabank.currency.client.GiphyApiClient;
@@ -53,18 +52,42 @@ public class BaseController {
 
     @Autowired
     private GiphyApiClient giphyClient;
+    
 
+//    @GetMapping("/api/v1/rates")
+//    public RatesResponseDTO getAllRates() {
+//        return exClient.getLatestRates();
+//    }
 
-    @GetMapping("/api/v1/rates")
-    public RatesResponseDTO getAllRates() {
-        return exClient.getLatestRates();
+    @PostMapping("/api/v1/rates/main")
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public void postGetResult() {
     }
 
+    @GetMapping("/api/v1/rates/main")
+    public ResponseEntity getMainCurrencyResult() throws IOException {
 
-    @GetMapping("/api/v1/rates/gif")
-    public ResponseEntity getRates() throws MalformedURLException, IOException {
+        return getCustomCurrencyResult(mainCurrency);
 
-        RatesResponseDTO ratesForToday = exClient.getLatestRatesByCurrency(mainCurrency);
+    }
+
+    @GetMapping("/api/v1/rates/{currency}")
+    public ResponseEntity getCustomCurrencyResult(@PathVariable String currency) throws IOException {
+
+        currency = currency.toUpperCase();
+
+        Map<String, String> currencies = exClient.getCurrencies();
+        if (!currencies.containsKey(currency.toUpperCase())) {
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("message", HttpStatus.NOT_FOUND);
+            map.put("status", HttpStatus.NOT_FOUND.value());
+            map.put("description", "No such currency: " + mainCurrency);
+
+            return new ResponseEntity(map, HttpStatus.NOT_FOUND);
+        }
+
+        RatesResponseDTO ratesForToday = exClient.getLatestRatesByCurrency(currency);
 
         long actualTimestampInMillis = Long.valueOf(ratesForToday.getTimestamp()) * 1_000;
         LocalDate yesterday = Instant.ofEpochMilli(actualTimestampInMillis)
@@ -72,10 +95,10 @@ public class BaseController {
 
         RatesResponseDTO ratesForYesterday = exClient
                 .getRatesByDateAndCurrency(yesterday.toString(),
-                        mainCurrency);
+                        currency);
 
-        BigDecimal todaysRate = ratesForToday.getRates().get(mainCurrency);
-        BigDecimal yesterdaysRate = ratesForYesterday.getRates().get(mainCurrency);
+        BigDecimal todaysRate = ratesForToday.getRates().get(currency);
+        BigDecimal yesterdaysRate = ratesForYesterday.getRates().get(currency);
 
         String tag = brokeTag;
         if (todaysRate.compareTo(yesterdaysRate) == 1) {
@@ -86,39 +109,15 @@ public class BaseController {
         String link = "https://i.giphy.com/media/" + r.getData().getId() + "/giphy.gif";
         URL url = new URL(link);
         Resource resource = new UrlResource(url);
-        
+
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_GIF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, 
-                        "attachment; filename=\"result_" 
-                                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) 
-                                + ".gif\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + tag + "_"
+                        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                        + ".gif\"")
                 .body(IOUtils.toByteArray(resource.getInputStream()));
-        
-    }
-    
-    @GetMapping("/api/v1/rates/{currency}")
-    public String getCustomCurrencyRates(@PathVariable String currency) {
-        currency = currency.toUpperCase();
-        RatesResponseDTO response = exClient.getLatestRatesByCurrency(currency);
-        BigDecimal result = response.getRates().get(currency);
 
-        return currency + ": " + result;
-
-    }
-
-    @GetMapping("/download/")
-    public ResponseEntity downloadFileFromLocal() throws MalformedURLException, IOException {
-        
-        URL url = new URL("https://i.giphy.com/media/QegLtOtLZpsskzgjLH/giphy.gif");
-        Resource resource = new UrlResource(url);
-        //https://i.giphy.com/media/3oFzlWFLgj0t6LhEyY/giphy.gif
-        
-        
-        return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_GIF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"fileGif.gif\"")
-                .body(IOUtils.toByteArray(resource.getInputStream()));
     }
 
 }

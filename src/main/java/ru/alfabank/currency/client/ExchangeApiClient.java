@@ -3,6 +3,7 @@
  */
 package ru.alfabank.currency.client;
 
+import java.util.Map;
 import ru.alfabank.currency.client.config.ExchangeFeignClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +20,11 @@ import ru.alfabank.currency.model.dto.RatesResponseDTO;
         configuration = ExchangeFeignClientConfig.class)
 public interface ExchangeApiClient {
     
-    @GetMapping("/latest.json")
-    public RatesResponseDTO getLatestRates();
+//    @GetMapping("/latest.json")
+//    public RatesResponseDTO getLatestRates();
+    
+    @GetMapping("/currencies.json")
+    public Map<String, String> getCurrencies();
     
     @GetMapping("/latest.json")
     public RatesResponseDTO getLatestRatesByCurrency(@RequestParam("symbols") String currency);
