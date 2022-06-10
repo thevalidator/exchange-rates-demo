@@ -4,6 +4,7 @@
 package ru.alfabank.currency.client;
 
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import ru.alfabank.currency.client.config.ExchangeFeignClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,24 +16,20 @@ import ru.alfabank.currency.model.dto.RatesResponseDTO;
  *
  * @author theValidator <the.validator@yandex.ru>
  */
-@FeignClient(name="${exchange.feign.config.name}", 
-        url="${exchange.feign.config.url}",
+@FeignClient(name = "${exchange.feign.config.name}",
+        url = "${exchange.feign.config.url}",
         configuration = ExchangeFeignClientConfig.class)
 public interface ExchangeApiClient {
     
-//    @GetMapping("/latest.json")
-//    public RatesResponseDTO getLatestRates();
-    
     @GetMapping("/currencies.json")
     public Map<String, String> getCurrencies();
-    
+
     @GetMapping("/latest.json")
-    public RatesResponseDTO getLatestRatesByCurrency(@RequestParam("symbols") String currency);
-    
-    @GetMapping("/historical/{date}.json")
-    public RatesResponseDTO getRatesByDateAndCurrency(@PathVariable String date, 
+    public RatesResponseDTO getLatestRatesByCurrency(@RequestParam("base") String baseCurrency, 
             @RequestParam("symbols") String currency);
 
-    
-    
+    @GetMapping("/historical/{date}.json")
+    public RatesResponseDTO getRatesByDateAndCurrency(@PathVariable String date,
+            @RequestParam("base") String baseCurrency, @RequestParam("symbols") String currency);
+
 }

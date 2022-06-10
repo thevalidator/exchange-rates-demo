@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class FeignExceptionHandler {
     
     @ExceptionHandler(FeignException.class)
-    public ResponseEntity<Object> handleFeignStatusException(FeignException e, HttpServletResponse response) {
+    public ResponseEntity<String> handleFeignStatusException(FeignException e, HttpServletResponse response) {
         
         return new ResponseEntity(e.getMessage(), HttpStatus.resolve(e.status()));
         

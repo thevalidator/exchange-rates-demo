@@ -16,16 +16,12 @@ public class ExchangeFeignClientConfig {
     @Value("${openexchangerates.token}")
     private String token;
     
-    @Value("${currency.base}")
-    private String baseCurrency;
-    
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
             requestTemplate.header("Accept", "application/json");
             requestTemplate.header("Content-Type", "application/json");
             requestTemplate.header("Authorization", "Token " + token);
-            requestTemplate.query("base", baseCurrency);
         };
     }
 

@@ -40,7 +40,10 @@ public class BaseController {
 
     @Value("${currency.main}")
     private String mainCurrency;
-
+    
+    @Value("${currency.base}")
+    private String baseCurrency;
+    
     @Value("${giphy.tag.rich}")
     private String richTag;
 
@@ -54,14 +57,14 @@ public class BaseController {
     private GiphyApiClient giphyClient;
     
 
-//    @GetMapping("/api/v1/rates")
-//    public RatesResponseDTO getAllRates() {
-//        return exClient.getLatestRates();
-//    }
-
     @PostMapping("/api/v1/rates/main")
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public void postGetResult() {
+    }
+    
+    @PostMapping("/api/v1/rates/{currency}")
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public void postCustomCurrencyResult() {
     }
 
     @GetMapping("/api/v1/rates/main")
@@ -79,15 +82,15 @@ public class BaseController {
         Map<String, String> currencies = exClient.getCurrencies();
         if (!currencies.containsKey(currency.toUpperCase())) {
 
-            Map<String, Object> map = new HashMap<>();
-            map.put("message", HttpStatus.NOT_FOUND);
-            map.put("status", HttpStatus.NOT_FOUND.value());
-            map.put("description", "No such currency: " + mainCurrency);
+            Map<String, String> map = new HashMap<>();
+            map.put("message", HttpStatus.NOT_FOUND.toString());
+            map.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
+            map.put("description", "No such currency: " + currency);
 
             return new ResponseEntity(map, HttpStatus.NOT_FOUND);
         }
 
-        RatesResponseDTO ratesForToday = exClient.getLatestRatesByCurrency(currency);
+        RatesResponseDTO ratesForToday = exClient.getLatestRatesByCurrency(baseCurrency, currency);
 
         long actualTimestampInMillis = Long.valueOf(ratesForToday.getTimestamp()) * 1_000;
         LocalDate yesterday = Instant.ofEpochMilli(actualTimestampInMillis)
@@ -95,7 +98,7 @@ public class BaseController {
 
         RatesResponseDTO ratesForYesterday = exClient
                 .getRatesByDateAndCurrency(yesterday.toString(),
-                        currency);
+                        baseCurrency, currency);
 
         BigDecimal todaysRate = ratesForToday.getRates().get(currency);
         BigDecimal yesterdaysRate = ratesForYesterday.getRates().get(currency);
@@ -113,7 +116,7 @@ public class BaseController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_GIF)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + tag + "_"
+                        "attachment; filename=\"" + tag + "_" + currency + "_"
                         + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
                         + ".gif\"")
                 .body(IOUtils.toByteArray(resource.getInputStream()));
