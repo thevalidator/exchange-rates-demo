@@ -52,8 +52,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 
         currency = currency.toUpperCase();
 
-        Map<String, String> availableCurrencies = getAvailableCurrencies();
-        if (!availableCurrencies.containsKey(currency.toUpperCase())) {
+        if (!isExists(currency)) {
             throw new NoSuchCurrencyException(currency);
         }
 
@@ -75,15 +74,8 @@ public class ExchangeServiceImpl implements ExchangeService {
             tag = richTag;
         }
 
-        GiphyResponseDTO r = giphyService.getTaggedRandomResponse(tag);
-
-        String link = "https://i.giphy.com/media/" + r.getData().getId() + "/giphy.gif";
-
-        URL url = new URL(link);
-
-        Resource resource = new UrlResource(url);
-
-        byte[] gifBytes = IOUtils.toByteArray(resource.getInputStream());
+        byte[] gifBytes = getGifBytes(tag);
+        
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 
         return ResponseEntity.ok()
@@ -100,6 +92,30 @@ public class ExchangeServiceImpl implements ExchangeService {
     @Override
     public Map<String, String> getAvailableCurrencies() {
         return exClient.getCurrencies();
+    }
+
+    private boolean isExists(String currency) {
+
+        Map<String, String> availableCurrencies = getAvailableCurrencies();
+        if (!availableCurrencies.containsKey(currency.toUpperCase())) {
+            return false;
+        }
+
+        return true;
+    }
+    
+    private byte[] getGifBytes(String tag) throws IOException {
+        
+        GiphyResponseDTO r = giphyService.getTaggedRandomResponse(tag);
+
+        String link = "https://i.giphy.com/media/" + r.getData().getId() + "/giphy.gif";
+
+        URL url = new URL(link);
+
+        Resource resource = new UrlResource(url);
+
+        return IOUtils.toByteArray(resource.getInputStream());
+        
     }
 
 }
