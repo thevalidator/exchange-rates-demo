@@ -19,6 +19,6 @@ import ru.alfabank.currency.model.dto.GiphyResponseDTO;
 public interface GiphyApiClient {
     
     @GetMapping("/random")
-    public GiphyResponseDTO getTaggedRandomResponse(@RequestParam("tag") String tag);
+    GiphyResponseDTO getTaggedRandomResponse(@RequestParam("tag") String tag);
     
 }

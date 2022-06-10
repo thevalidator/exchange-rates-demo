@@ -13,8 +13,8 @@ import org.springframework.http.ResponseEntity;
  */
 public interface ExchangeService {
 
-    ResponseEntity getCustomCurrencyResult(String currency) throws IOException;
+    ResponseEntity<byte[]> getCustomCurrencyResult(String currency) throws IOException;
 
-    Map<String, String> getAviableCurrencies();
+    Map<String, String> getAvailableCurrencies();
 
 }

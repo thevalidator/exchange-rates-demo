@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +18,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.alfabank.currency.client.ExchangeApiClient;
+import ru.alfabank.currency.client.exception.NoSuchCurrencyException;
 import ru.alfabank.currency.model.dto.GiphyResponseDTO;
 import ru.alfabank.currency.model.dto.RatesResponseDTO;
 
@@ -49,19 +48,13 @@ public class ExchangeServiceImpl implements ExchangeService {
     private GiphyService giphyService;
 
     @Override
-    public ResponseEntity getCustomCurrencyResult(String currency) throws IOException {
+    public ResponseEntity<byte[]> getCustomCurrencyResult(String currency) throws IOException {
 
         currency = currency.toUpperCase();
 
-        Map<String, String> aviableCurrencies = getAviableCurrencies();
-        if (!aviableCurrencies.containsKey(currency.toUpperCase())) {
-
-            Map<String, String> map = new HashMap<>();
-            map.put("message", HttpStatus.NOT_FOUND.toString());
-            map.put("status", String.valueOf(HttpStatus.NOT_FOUND.value()));
-            map.put("description", "No such currency: " + currency);
-
-            return new ResponseEntity(map, HttpStatus.NOT_FOUND);
+        Map<String, String> availableCurrencies = getAvailableCurrencies();
+        if (!availableCurrencies.containsKey(currency.toUpperCase())) {
+            throw new NoSuchCurrencyException(currency);
         }
 
         RatesResponseDTO ratesForToday = exClient.getLatestRatesByCurrency(baseCurrency, currency);
@@ -105,7 +98,7 @@ public class ExchangeServiceImpl implements ExchangeService {
     }
 
     @Override
-    public Map<String, String> getAviableCurrencies() {
+    public Map<String, String> getAvailableCurrencies() {
         return exClient.getCurrencies();
     }
 

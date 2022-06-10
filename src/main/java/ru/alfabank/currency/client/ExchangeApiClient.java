@@ -4,7 +4,6 @@
 package ru.alfabank.currency.client;
 
 import java.util.Map;
-import org.springframework.beans.factory.annotation.Value;
 import ru.alfabank.currency.client.config.ExchangeFeignClientConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,14 +21,14 @@ import ru.alfabank.currency.model.dto.RatesResponseDTO;
 public interface ExchangeApiClient {
     
     @GetMapping("/currencies.json")
-    public Map<String, String> getCurrencies();
+    Map<String, String> getCurrencies();
 
     @GetMapping("/latest.json")
-    public RatesResponseDTO getLatestRatesByCurrency(@RequestParam("base") String baseCurrency, 
+    RatesResponseDTO getLatestRatesByCurrency(@RequestParam("base") String baseCurrency, 
             @RequestParam("symbols") String currency);
 
     @GetMapping("/historical/{date}.json")
-    public RatesResponseDTO getRatesByDateAndCurrency(@PathVariable String date,
+    RatesResponseDTO getRatesByDateAndCurrency(@PathVariable String date,
             @RequestParam("base") String baseCurrency, @RequestParam("symbols") String currency);
 
 }
